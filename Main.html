@@ -12,22 +12,104 @@
     <div id="app" class="container py-5">
         <h1 class="mb-4">DR Musikplader</h1>
 
+        <section class="card mb-4" aria-label="Login">
+            <div v-if="!auth.token" class="card-body">
+                <h2 class="h5">Log ind</h2>
+
+                <form @submit.prevent="login" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="username" class="form-label">Brugernavn</label>
+                        <input id="username"
+                               v-model="usernameInput"
+                               type="text"
+                               class="form-control"
+                               autocomplete="username"
+                               required>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="password" class="form-label">Adgangskode</label>
+                        <input id="password"
+                               v-model="passwordInput"
+                               type="password"
+                               class="form-control"
+                               autocomplete="current-password"
+                               required>
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button id="loginButton"
+                                type="submit"
+                                class="btn btn-primary"
+                                :disabled="isLoggingIn">
+                            {{ isLoggingIn ? 'Logger ind...' : 'Log ind' }}
+                        </button>
+                    </div>
+                </form>
+
+                <div v-if="loginError"
+                     id="loginError"
+                     class="alert alert-danger mt-3 mb-0"
+                     role="alert">
+                    {{ loginError }}
+                </div>
+            </div>
+
+            <div v-else id="loginStatus" class="card-body d-flex align-items-center gap-3">
+                <span>
+                    Logget ind som
+                    <strong id="currentUsername">{{ auth.username }}</strong>
+                    (<span id="currentRole">{{ auth.role }}</span>)
+                </span>
+
+                <button id="logoutButton"
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        @click="logout">
+                    Log ud
+                </button>
+            </div>
+        </section>
+
         <form @submit.prevent="fetchRecords" class="row g-3 mb-4">
             <div class="col-md-5">
                 <label for="titleFilter" class="form-label">Titel</label>
-                <input id="titleFilter" v-model="titleFilter" type="text" class="form-control">
+                <input id="titleFilter"
+                       v-model="titleFilter"
+                       type="text"
+                       class="form-control">
             </div>
+
             <div class="col-md-5">
                 <label for="artistFilter" class="form-label">Kunstner</label>
-                <input id="artistFilter" v-model="artistFilter" type="text" class="form-control">
+                <input id="artistFilter"
+                       v-model="artistFilter"
+                       type="text"
+                       class="form-control">
             </div>
+
             <div class="col-md-2 d-flex align-items-end gap-2">
-                <button id="searchButton" type="submit" class="btn btn-primary" :disabled="isLoading">Søg</button>
-                <button id="resetButton" type="button" class="btn btn-secondary" :disabled="isLoading" @click="resetFilters">Nulstil</button>
+                <button id="searchButton"
+                        type="submit"
+                        class="btn btn-primary"
+                        :disabled="isLoading">
+                    Søg
+                </button>
+
+                <button id="resetButton"
+                        type="button"
+                        class="btn btn-secondary"
+                        :disabled="isLoading"
+                        @click="resetFilters">
+                    Nulstil
+                </button>
             </div>
         </form>
 
-        <div v-if="errorMessage" class="alert alert-danger" role="alert">
+        <div v-if="errorMessage"
+             id="recordsError"
+             class="alert alert-danger"
+             role="alert">
             {{ errorMessage }}
         </div>
 
@@ -36,7 +118,8 @@
         </div>
 
         <div v-if="records.length > 0" class="table-responsive">
-            <table id="recordsTable" class="table table-striped table-hover table-bordered bg-white shadow-sm">
+            <table id="recordsTable"
+                   class="table table-striped table-hover table-bordered bg-white shadow-sm">
                 <thead class="table-dark">
                     <tr>
                         <th>Titel</th>
@@ -56,12 +139,15 @@
             </table>
         </div>
 
-        <div v-else-if="!isLoading && !errorMessage" id="noResults" class="text-muted" role="status">
+        <div v-else-if="!isLoading && !errorMessage"
+             id="noResults"
+             class="text-muted"
+             role="status">
             Ingen musikplader fundet
         </div>
     </div>
 
-    <!-- Placeret i bunden så #app er indlæst i DOM'en først -->
+    <!-- Main.js indlæses efter app-elementet, så Vue kan finde #app. -->
     <script src="Main.js"></script>
 </body>
 </html>
