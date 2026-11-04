@@ -14,11 +14,26 @@ createApp({
                 username: '',
                 role: ''
             },
+            newRecord: {
+                title: '',
+                artist: '',
+                duration: null,
+                publicationYear: new Date().getUTCFullYear()
+            },
             isLoading: false,
             isLoggingIn: false,
+            isCreating: false,
             errorMessage: '',
-            loginError: ''
+            loginError: '',
+            recordError: '',
+            recordSuccess: ''
         };
+    },
+
+    computed: {
+        currentYear() {
+            return new Date().getUTCFullYear();
+        }
     },
 
     mounted() {
@@ -74,6 +89,110 @@ createApp({
                 }
             } finally {
                 this.isLoggingIn = false;
+            }
+        },
+
+        async createRecord() {
+            if (this.isCreating) {
+                return;
+            }
+
+            this.recordError = '';
+            this.recordSuccess = '';
+
+            const title = this.newRecord.title.trim();
+            const artist = this.newRecord.artist.trim();
+            const duration = this.newRecord.duration;
+            const publicationYear = this.newRecord.publicationYear;
+
+            if (!title || !artist) {
+                this.recordError = 'Titel og kunstner skal indeholde tekst.';
+                return;
+            }
+
+            if (!Number.isInteger(duration) || duration < 1) {
+                this.recordError =
+                    'Varighed skal være et helt tal på mindst 1 sekund.';
+                return;
+            }
+
+            if (!Number.isInteger(publicationYear) ||
+                publicationYear < 1 ||
+                publicationYear > this.currentYear) {
+                this.recordError =
+                    `Udgivelsesår skal være mellem 1 og ${this.currentYear}.`;
+                return;
+            }
+
+            this.isCreating = true;
+
+            try {
+                const response = await axios.post(
+                    'https://localhost:7297/api/records',
+                    {
+                        title,
+                        artist,
+                        duration,
+                        publicationYear
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.auth.token}`
+                        }
+                    });
+
+                this.recordSuccess =
+                    `Musikpladen "${response.data.title}" blev oprettet.`;
+
+                this.newRecord = {
+                    title: '',
+                    artist: '',
+                    duration: null,
+                    publicationYear: this.currentYear
+                };
+
+                // Nulstil filtre, så den nye plade vises i listen.
+                this.titleFilter = '';
+                this.artistFilter = '';
+
+                // Vent på en igangværende hentning, før listen opdateres.
+                while (this.isLoading) {
+                    await new Promise(resolve => setTimeout(resolve, 25));
+                }
+
+                await this.fetchRecords();
+            } catch (error) {
+                console.error('Fejl ved oprettelse af musikplade:', error);
+
+                const status = error.response?.status;
+
+                if (status === 400) {
+                    const errors = error.response.data?.errors;
+
+                    this.recordError = errors
+                        ? Object.values(errors).flat().join(' ')
+                        : error.response.data?.title ??
+                          'Kontrollér oplysningerne, og prøv igen.';
+                } else if (status === 401) {
+                    this.auth = {
+                        token: '',
+                        expiresAtUtc: '',
+                        username: '',
+                        role: ''
+                    };
+
+                    this.loginError =
+                        'Dit login er udløbet eller ugyldigt. Log ind igen.';
+                    this.recordError = this.loginError;
+                } else if (status === 403) {
+                    this.recordError =
+                        'Du skal være administrator for at oprette musikplader.';
+                } else {
+                    this.recordError =
+                        'Musikpladen kunne ikke oprettes. Kontrollér, at backend kører på https://localhost:7297.';
+                }
+            } finally {
+                this.isCreating = false;
             }
         },
 

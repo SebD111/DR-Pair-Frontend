@@ -71,6 +71,80 @@
             </div>
         </section>
 
+        <section v-if="auth.role === 'Admin'"
+         class="card mb-4"
+         aria-label="Opret musikplade">
+    <div class="card-body">
+        <h2 class="h5">Opret musikplade</h2>
+
+        <form @submit.prevent="createRecord" class="row g-3">
+            <div class="col-md-4">
+                <label for="recordTitle" class="form-label">Titel</label>
+                <input id="recordTitle"
+                       v-model="newRecord.title"
+                       type="text"
+                       class="form-control"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label for="recordArtist" class="form-label">Kunstner</label>
+                <input id="recordArtist"
+                       v-model="newRecord.artist"
+                       type="text"
+                       class="form-control"
+                       required>
+            </div>
+
+            <div class="col-md-2">
+                <label for="recordDuration" class="form-label">Varighed i sekunder</label>
+                <input id="recordDuration"
+                       v-model.number="newRecord.duration"
+                       type="number"
+                       class="form-control"
+                       min="1"
+                       step="1"
+                       required>
+            </div>
+
+            <div class="col-md-2">
+                <label for="recordPublicationYear" class="form-label">Udgivelsesår</label>
+                <input id="recordPublicationYear"
+                       v-model.number="newRecord.publicationYear"
+                       type="number"
+                       class="form-control"
+                       min="1"
+                       :max="currentYear"
+                       step="1"
+                       required>
+            </div>
+
+            <div class="col-12">
+                <button id="createRecordButton"
+                        type="submit"
+                        class="btn btn-success"
+                        :disabled="isCreating">
+                    {{ isCreating ? 'Opretter...' : 'Opret musikplade' }}
+                </button>
+            </div>
+        </form>
+
+        <div v-if="recordError"
+             id="recordError"
+             class="alert alert-danger mt-3 mb-0"
+             role="alert">
+            {{ recordError }}
+        </div>
+
+        <div v-if="recordSuccess"
+             id="recordSuccess"
+             class="alert alert-success mt-3 mb-0"
+             role="status">
+            {{ recordSuccess }}
+        </div>
+    </div>
+</section>
+
         <form @submit.prevent="fetchRecords" class="row g-3 mb-4">
             <div class="col-md-5">
                 <label for="titleFilter" class="form-label">Titel</label>
